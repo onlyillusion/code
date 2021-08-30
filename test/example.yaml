@@ -1,40 +1,25 @@
-apiVersion: v1
-kind: Service
+apiVersion: argoproj.io/v1alpha1
+kind: Application
 metadata:
-  name: helloworld
-  labels:
-    app: helloworld
+  name: clickhouse-operator
+  annotations:
+     recipients.argocd-notifications.argoproj.io: "teams: channelName"
 spec:
-  ports:
-  - name: http
-    port: 8000
-    targetPort: 8000
-  selector:
-    app: helloworld
-  type: LoadBalancer
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: helloworld
-  labels:
-    app: helloworld
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: helloworld
-  template:
-    metadata:
-      labels:
-        app: helloworld
-    spec:
-      containers:
-      - name: helloworld
-        image: signalsciences/example-helloworld:latest
-        imagePullPolicy: IfNotPresent
-        args:
-        # Address for the app to listen on
-        - localhost:8000
-        ports:
-        - containerPort: 8000
+  destination:
+    namespace: clickhouse-operator
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: ''
+    repoURL: "https://slamdev.github.io/helm-charts/"
+    targetRevision: 0.0.5
+    chart: altinity-clickhouse-operator
+    helm:
+      values: |-
+        operator:
+           nodeSelector:
+            node-purpose: infra
+  project: cluster-addons
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
