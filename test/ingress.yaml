@@ -40,7 +40,7 @@ spec:
           enabled: true
           nodeSelector:
             node-purpose: infra
-  project: cluster-addons
+  project: default
   syncPolicy:
     automated:
       prune: true
