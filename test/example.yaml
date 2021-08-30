@@ -1,25 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: clickhouse-operator
-  annotations:
-     recipients.argocd-notifications.argoproj.io: "teams: channelName"
+  name: guestbook
+  namespace: argocd
 spec:
-  destination:
-    namespace: clickhouse-operator
-    server: 'https://kubernetes.default.svc'
+  project: default
   source:
-    path: ''
-    repoURL: "https://slamdev.github.io/helm-charts/"
-    targetRevision: 0.0.5
-    chart: altinity-clickhouse-operator
-    helm:
-      values: |-
-        operator:
-           nodeSelector:
-            node-purpose: infra
-  project: cluster-addons
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook
