@@ -1,1 +1,47 @@
 
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-ingress
+  annotations:
+     recipients.argocd-notifications.argoproj.io: "teams: channelName"
+spec:
+  destination:
+    namespace: ingress-nginx
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: ''
+    repoURL: "https://kubernetes.github.io/ingress-nginx"
+    targetRevision: 3.31.0
+    chart: ingress-nginx
+    helm:
+      values: |-
+        controller:
+          admissionWebhooks:
+            enabled: false
+          config:
+            proxy-body-size: 440m
+            compute-full-forwarded-for: "true"
+            use-forwarded-headers: "true"
+            server-tokens: "false"
+            more-clear-headers: "Server"
+          service:
+            enabled: true
+            healthCheckNodePort: 0
+            type: NodePort
+            nodePorts:
+              http: 30000
+              https: 30002
+            tcp: 
+              8080:32808
+          nodeSelector:
+            node-purpose: infra
+        defaultBackend:
+          enabled: true
+          nodeSelector:
+            node-purpose: infra
+  project: cluster-addons
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
