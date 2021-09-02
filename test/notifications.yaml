@@ -2,6 +2,8 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: argocd-notifications
+  annotations:
+     recipients.argocd-notifications.argoproj.io: "teams: channelName"
 spec:
   destination:
     namespace: kube-system
@@ -11,7 +13,122 @@ spec:
     repoURL: "https://argoproj.github.io/argo-helm"
     targetRevision: 1.2.0
     chart: argocd-notifications
-  
+    helm:
+      values: |-
+
+        argocdUrl: https://argocd.example.com
+        notifiers:
+          service.teams: |
+            recipientUrls:
+              channelName: $channel-teams-url
+        subscriptions:
+          - recipients:
+            - teams:channelName
+            triggers:
+            - on-health-degraded
+            - on-deployed
+        templates:
+          template.app-health-degraded: |
+            email:
+              subject: Application {{.app.metadata.name}} has degraded.
+            message: |
+              {{if eq .serviceType "email"}}:exclamation:{{end}} Application {{.app.metadata.name}} has degraded.
+              Application details: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}.
+            teams:
+              facts: |
+                [{
+                  "name": "Sync Status",
+                  "value": "{{.app.status.sync.status}}"
+                },
+                {
+                  "name": "Repository",
+                  "value": "{{.app.spec.source.repoURL}}"
+                }
+                {{range $index, $c := .app.status.conditions}}
+                  {{if not $index}},{{end}}
+                  {{if $index}},{{end}}
+                  {
+                    "name": "{{$c.type}}",
+                    "value": "{{$c.message}}",
+                  }
+                {{end}}
+                ]
+              potentialAction: |
+                [{
+                  "@type":"OpenUri",
+                  "name":"Open Application",
+                  "targets":[{
+                    "os":"default",
+                    "uri":"{{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
+                  }]
+                },
+                {
+                  "@type":"OpenUri",
+                  "name":"Open Repository",
+                  "targets":[{
+                    "os":"default",
+                    "uri":"{{.app.spec.source.repoURL | call .repo.RepoURLToHTTPS}}"
+                  }]
+                }]
+              title: Application {{.app.metadata.name}} has degraded.
+          template.app-deployed: |
+            email:
+              subject: New version of an application {{.app.metadata.name}} is up and running.
+            message: |
+              {{if eq .serviceType "slack"}}:white_check_mark:{{end}} Application {{.app.metadata.name}} is now running new version of deployments manifests.
+            teams:
+              facts: |
+                [{
+                  "name": "Sync Status",
+                  "value": "{{.app.status.sync.status}}"
+                },
+                {
+                  "name": "Repository",
+                  "value": "{{.app.spec.source.repoURL}}"
+                },
+                {
+                  "name": "Revision",
+                  "value": "{{.app.status.sync.revision}}"
+                }
+                {{range $index, $c := .app.status.conditions}}
+                  {{if not $index}},{{end}}
+                  {{if $index}},{{end}}
+                  {
+                    "name": "{{$c.type}}",
+                    "value": "{{$c.message}}",
+                  }
+                {{end}}
+                ]
+              potentialAction: |-
+                [{
+                  "@type":"OpenUri",
+                  "name":"Operation Application",
+                  "targets":[{
+                    "os":"default",
+                    "uri":"{{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
+                  }]
+                },
+                {
+                  "@type":"OpenUri",
+                  "name":"Open Repository",
+                  "targets":[{
+                    "os":"default",
+                    "uri":"{{.app.spec.source.repoURL | call .repo.RepoURLToHTTPS}}"
+                  }]
+                }]
+              title: New version of an application {{.app.metadata.name}} is up and running.
+        triggers:
+          trigger.on-health-degraded: |
+           - description: Application has degraded
+             send:
+             - app-health-degraded
+             when: app.status.health.status == 'Degraded'
+          trigger.on-deployed: |
+           - description: Application is synced and healthy. Triggered once per commit.
+             oncePer: app.status.sync.revision
+             send:
+             - app-deployed
+             when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
   project: cluster-addons
   syncPolicy:
     automated:
