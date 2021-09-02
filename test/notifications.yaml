@@ -32,7 +32,7 @@ spec:
             email:
               subject: Application {{.app.metadata.name}} has degraded.
             message: |
-              {{if eq .serviceType "email"}}:exclamation:{{end}} Application {{.app.metadata.name}} has degraded.
+              {{if eq .serviceType "email"}}:exclamation:{{end}} Application {{.app.metadata.name}} has degraded!!!.
               Application details: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}.
             teams:
               facts: |
