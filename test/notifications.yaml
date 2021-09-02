@@ -21,6 +21,8 @@ spec:
           service.teams: |
             recipientUrls:
               channelName: $channel-teams-url
+          service.slack: |
+              token: $slack-token    
         subscriptions:
           - recipients:
             - teams:channelName
