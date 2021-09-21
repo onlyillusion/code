@@ -11,6 +11,9 @@ spec:
     repoURL: "https://actions-runner-controller.github.io/actions-runner-controller"
     targetRevision: 0.13.0
     chart: actions-runner-controller
+    helm:
+      values: |-
+       replicaCount: 2
   project: cluster-addons
   syncPolicy:
     automated:
