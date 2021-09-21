@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-ingress
+spec:
+  destination:
+    namespace: ingress-nginx
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: ''
+    repoURL: "https://kubernetes.github.io/ingress-nginx"
+    targetRevision: 3.31.0
+    chart: ingress-nginx
+    helm:
+      values: |-
+        controller:
+          admissionWebhooks:
+            enabled: true
+          service:
+            enabled: true
+            annotations: 
+             service.beta.kubernetes.io/azure-load-balancer-internal: "true" 
+          nodeSelector:
+            node-purpose: infra
+        defaultBackend:
+          enabled: true
+  project: cluster-addons
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
