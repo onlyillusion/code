@@ -1,2 +1,2 @@
 # code
-for testing somtehing 
+for testing something
