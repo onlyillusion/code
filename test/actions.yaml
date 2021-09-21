@@ -4,7 +4,7 @@ metadata:
   name: actions-runner-controller
 spec:
   destination:
-    namespace: kube-system
+    namespace: actions-runner-system
     server: 'https://kubernetes.default.svc'
   source:
     path: ''
