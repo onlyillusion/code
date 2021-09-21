@@ -21,7 +21,7 @@ spec:
             annotations: 
              service.beta.kubernetes.io/azure-load-balancer-internal: "true" 
           nodeSelector:
-            node-purpose: infra
+            node-purpose: agent
         defaultBackend:
           enabled: true
   project: cluster-addons
