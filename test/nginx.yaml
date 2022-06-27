@@ -20,7 +20,6 @@ spec:
             enabled: true
           service:
             enabled: true
-            
         defaultBackend:
           enabled: true
   syncPolicy:
